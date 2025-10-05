@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install development dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    git \
+    curl \
+    wget \
+    vim \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+COPY requirements-dev.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
+
+# Install development tools
+RUN pip install debugpy watchdog
+
+# Create necessary directories
+RUN mkdir -p logs data tests
+
+# Expose port
+EXPOSE 8000
+
+# Start with hot reload
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

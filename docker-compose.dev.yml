@@ -1,0 +1,73 @@
+# docker-compose.dev.yml
+version: '3.8'
+
+services:
+  # Development-specific Moodle with XDebug
+  moodle-dev:
+    build:
+      context: ./moodle
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:80"
+    environment:
+      XDEBUG_MODE: develop,debug
+      XDEBUG_CONFIG: client_host=host.docker.internal
+    volumes:
+      - ./moodle:/var/www/html
+      - moodledata:/var/moodledata
+      - ./moodle/themes/digidara:/var/www/html/theme/digidara
+      - ./moodle/blocks/digidara_ai:/var/www/html/blocks/digidara_ai
+    depends_on:
+      - db
+    networks:
+      - academy-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # AI Service with hot reload
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - RELOAD=true
+    volumes:
+      - ./ai-service:/app
+    depends_on:
+      - ai-db
+      - qdrant
+    networks:
+      - academy-network
+
+  # MailHog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - academy-network
+
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    networks:
+      - academy-network
+
+  # PHPMyAdmin alternative
+  phpmyadmin:
+    image: phpmyadmin:latest
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    networks:
+      - academy-network

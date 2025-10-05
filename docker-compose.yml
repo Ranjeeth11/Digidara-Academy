@@ -1,0 +1,109 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # Moodle Application
+  moodle:
+    build:
+      context: ./moodle
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      MOODLE_DATABASE_HOST: db
+      MOODLE_DATABASE_USER: moodleuser
+      MOODLE_DATABASE_PASSWORD: moodlepass
+      MOODLE_DATABASE_NAME: moodle
+      MOODLE_DATABASE_PORT: 3306
+      MOODLE_SITE_URL: http://localhost:8080
+    volumes:
+      - moodledata:/var/moodledata
+      - ./moodle/themes:/var/www/html/theme
+      - ./moodle/blocks:/var/www/html/blocks
+    depends_on:
+      - db
+    networks:
+      - academy-network
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: moodle
+      MYSQL_USER: moodleuser
+      MYSQL_PASSWORD: moodlepass
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - academy-network
+
+  # AI Service (FastAPI)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@ai-db:5432/ai_service
+      - JWT_SECRET=your-jwt-secret-here
+      - MOODLE_WS_URL=http://moodle/webservice/rest/server.php
+      - MOODLE_WS_TOKEN=your-moodle-ws-token
+    volumes:
+      - ./ai-service:/app
+    depends_on:
+      - ai-db
+    networks:
+      - academy-network
+
+  # AI Service Database (PostgreSQL)
+  ai-db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ai_service
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ai_db_data:/var/lib/postgresql/data
+    networks:
+      - academy-network
+
+  # Vector Database (Qdrant)
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - academy-network
+
+  # Nginx Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - moodle
+      - ai-service
+    networks:
+      - academy-network
+
+volumes:
+  moodledata:
+  dbdata:
+  ai_db_data:
+  qdrant_data:
+
+networks:
+  academy-network:
+    driver: bridge
