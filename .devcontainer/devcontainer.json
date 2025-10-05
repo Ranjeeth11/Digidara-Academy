@@ -1,19 +1,11 @@
 {
-  "name": "DigiDARA Academy Full Stack",
+  "name": "DigiDARA Academy",
   "dockerComposeFile": [
-    "../docker-compose.yml",
-    "../docker-compose.dev.yml"
+    "docker-compose.yml"
   ],
-  "service": "moodle-dev",
+  "service": "codespace",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "forwardPorts": [
-    8080,
-    8000,
-    3306,
-    6333,
-    5432,
-    8025
-  ],
+  "forwardPorts": [8080, 8000, 3306, 6333, 5432, 8025, 8081],
   "portsAttributes": {
     "8080": {
       "label": "Moodle App",
@@ -34,6 +26,9 @@
     },
     "8025": {
       "label": "MailHog UI"
+    },
+    "8081": {
+      "label": "Adminer DB Manager"
     }
   },
   "postCreateCommand": "bash .devcontainer/setup.sh",
@@ -41,56 +36,23 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        // PHP Extensions
         "bmewburn.vscode-intelephense-client",
         "felixfbecker.php-debug",
-        "neilbrayfield.php-docblocker",
-        
-        // Python Extensions
         "ms-python.python",
         "ms-python.vscode-pylance",
-        "ms-python.black-formatter",
-        "charliermarsh.ruff",
-        
-        // Docker Extensions
         "ms-azuretools.vscode-docker",
-        
-        // Database Extensions
         "mtxr.sqltools",
         "mtxr.sqltools-driver-mysql",
         "mtxr.sqltools-driver-pg",
-        
-        // Git & GitHub
         "github.vscode-pull-request-github",
-        "eamodio.gitlens",
-        
-        // Web Development
-        "bradlc.vscode-tailwindcss",
-        "esbenp.prettier-vscode",
-        
-        // AI/ML
-        "ms-toolsai.jupyter",
-        
-        // Utilities
-        "usernamehw.errorlens",
-        "formulahendry.auto-rename-tag",
-        "christian-kohler.path-intellisense"
+        "esbenp.prettier-vscode"
       ],
       "settings": {
         "php.validate.executablePath": "/usr/local/bin/php",
         "python.pythonPath": "/usr/local/bin/python",
-        "python.analysis.autoImportCompletions": true,
-        "python.analysis.typeCheckingMode": "basic",
         "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.fixAll": true,
-          "source.organizeImports": true
-        },
         "[python]": {
           "editor.defaultFormatter": "ms-python.black-formatter"
-        },
-        "[php]": {
-          "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
         }
       }
     }

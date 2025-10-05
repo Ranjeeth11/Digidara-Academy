@@ -3,49 +3,46 @@ set -e
 
 echo "🚀 Setting up DigiDARA Academy Development Environment..."
 
-# Install pre-commit hooks
-pre-commit install
-
 # Create necessary directories
 mkdir -p \
-    moodle/themes/digidara \
-    moodle/blocks/digidara_ai \
-    ai-service/src/rag \
-    ai-service/src/models \
-    ai-service/tests \
-    nginx/conf.d \
+    moodle/themes \
+    moodle/blocks \
+    ai-service/src \
     sql \
     logs
 
-# Set up Git hooks
-cat > .git/hooks/pre-commit << 'EOF'
-#!/bin/bash
-echo "Running pre-commit checks..."
-# Python checks
-python -m black --check ai-service/src/
-python -m ruff ai-service/src/
-# PHP checks (if PHP files changed)
-git diff --cached --name-only | grep -E '\.php$' && php -l || true
-EOF
-chmod +x .git/hooks/pre-commit
-
-# Install Moodle if not exists
-if [ ! -f "moodle/version.php" ]; then
-    echo "📥 Downloading Moodle..."
-    git clone -b MOODLE_402_STABLE https://github.com/moodle/moodle.git moodle-temp
-    cp -r moodle-temp/* moodle/
-    cp -r moodle-temp/.git moodle/
-    rm -rf moodle-temp
+# Install Python dependencies for AI service
+if [ -f "ai-service/requirements.txt" ]; then
+    echo "📦 Installing AI service dependencies..."
+    cd ai-service
+    pip install -r requirements.txt
+    cd ..
 fi
-
-# Set permissions
-chmod -R 755 moodle/
-chmod -R 777 moodledata/
 
 # Create .env file if not exists
 if [ ! -f ".env" ]; then
-    cp .env.example .env
-    echo "📝 Created .env file from template. Please update with your values."
+    echo "📝 Creating .env file from template..."
+    cat > .env << EOF
+# Moodle Configuration
+MOODLE_DATABASE_HOST=db
+MOODLE_DATABASE_USER=moodleuser
+MOODLE_DATABASE_PASSWORD=moodlepass
+MOODLE_DATABASE_NAME=moodle
+MOODLE_SITE_URL=http://localhost:8080
+
+# JWT Configuration
+JWT_SECRET=change-this-to-a-secure-random-secret
+
+# Moodle Web Services
+MOODLE_WS_TOKEN=your-moodle-ws-token-here
+
+# Razorpay Sandbox
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-secret
+
+# Development
+ENVIRONMENT=development
+EOF
 fi
 
 echo "✅ Development environment setup completed!"

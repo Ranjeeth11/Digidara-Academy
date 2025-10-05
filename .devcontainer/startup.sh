@@ -7,12 +7,8 @@ echo "🔧 Starting development services..."
 echo "⏳ Waiting for databases..."
 while ! nc -z db 3306; do sleep 1; done
 while ! nc -z ai-db 5432; do sleep 1; done
-while ! nc -z qdrant 6333; do sleep 1; done
 
 echo "✅ All databases are ready!"
-
-# Run database migrations if needed
-echo "🗃️ Setting up databases..."
 
 # Initialize Moodle database if not exists
 if ! mysql -h db -u root -prootpass -e "USE moodle" 2>/dev/null; then
@@ -32,7 +28,6 @@ echo "📊 Access your services:"
 echo "   - Moodle:          http://localhost:8080"
 echo "   - AI Service:      http://localhost:8000"
 echo "   - API Docs:        http://localhost:8000/docs"
-echo "   - Qdrant:          http://localhost:6333"
 echo "   - MailHog (Email): http://localhost:8025"
 echo "   - Adminer (DB):    http://localhost:8081"
 echo ""
